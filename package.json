@@ -1,0 +1,22 @@
+{
+  "name": "fluff",
+  "version": "1.0.0",
+  "description": "An online version of the dice game fluff",
+  "main": "h.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jtrujillo-hga/fluff.git"
+  },
+  "author": "Julio Trujillo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jtrujillo-hga/fluff/issues"
+  },
+  "homepage": "https://github.com/jtrujillo-hga/fluff#readme",
+  "dependencies": {
+    "fs": "0.0.1-security"
+  }
+}

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>fluff</title>
+        <link href="https://fonts.googleapis.com/css2?family=Muli&display=swap" rel="stylesheet">
+        <!-- <script src="/socket.io/socket.io.js"></script> -->
+        <!-- <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script> -->
+        <style>
+            :root {
+                --pail: #f4f1de;
+                --orange: #e07a5f;
+                --darkblue: #3d405b;
+                --lightblue: #78C0C5;
+                --mint: #81b29a;
+                --baige: #f2cc8f;
+                --w: #FFFFFF;
+                --b: #000000;
+            }
+            ::selection {
+                color: none;
+                background: none;
+            }
+            body {
+                font-family: 'Muli', sans-serif;
+                background-color: var(--pail);
+            }
+            #header {
+                /* display: flex; */
+                background-color: var(--mint);
+                margin: -8px -8px 0px -8px;
+                padding: 10px 10px 10px 10px;
+            }
+            ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            li {
+                display: inline;
+            }
+            li .e {
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+            }
+            .button {
+                display: inline-block;
+                background-color: var(--orange);
+                color: var(--w);
+                border-radius: 15px;
+                margin-left: 10px;
+                padding: 15px 15px; 
+                font-size: 30px;
+                text-align: center;
+            }
+            .button:hover {
+                background-color:var(--lightblue);
+                transition: 0.3s;
+            }
+            #login {
+                /* visibility: hidden; */
+                /* background-color: hsla(0, 100%, 100%, 0.47);
+                width: 100%;
+                height: 100%;
+                display: flex;*/
+                
+                height: 100%; 
+                width: 100%;
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Sit on top */
+                left: 0;
+                top: 0;
+                /* /* background-color: rgb(0,0,0); Black fallback color */
+                background-color: hsla(0, 100%, 100%, 0.47); /*Black w/opacity*/
+                overflow-x: hidden; /* Disable horizontal scroll */
+                
+            }
+            #login #box {
+                position: relative;
+                margin:auto;
+                top: 30%;
+                left: 23%;
+                background-color: var(--baige);
+                display: inline-block;
+                border-radius: 15px;
+                padding-top: 60px;
+                padding: 10px;
+                /* display: flex;
+                align-items: center; */
+               
+            }
+            #login input {
+                border-radius: 15px;
+                background-color: var(--pail);
+                padding: 20px 15px; 
+                font-size: 45px;
+                width: 80%;
+                color: var(--o);
+                font-weight: 700;
+                text-align: center;
+            }
+            #enter-name {
+                font-size: 50px;
+                font-weight: 700;
+                margin-bottom: 15px;
+            }
+            #name-submit {
+                width: 10%;
+            }
+            #fluff-submit {
+                width: 40%;
+            }
+            #sidebar {
+                position: fixed;
+                border: 0;
+                color: var(--w);
+                border-style: solid;
+                background-color: var(--darkblue);
+                height: 100%;
+                width: 320px;
+                margin-left: -8px;
+                padding-left: 20px;
+                padding-bottom: 30px;
+                left: 0;
+                z-index: 1;
+            }
+            .up-arrow {
+                display: inline-block;
+                width: 0; 
+                height: 0; 
+                border-left: 21px solid transparent;
+                border-right: 21px solid transparent;
+                border-bottom: 21px solid var(--orange);
+            }
+            .up-arrow:hover {
+                border-bottom: 21px solid var(--lightblue);
+                transition: 0.3s;
+            }
+            .down-arrow {
+                display: inline-block;
+                width: 0; 
+                height: 0; 
+                border-left: 20px solid transparent;
+                border-right: 20px solid transparent;
+                border-top: 20px solid var(--orange);
+            }
+            .down-arrow:hover {
+                border-top: 21px solid var(--lightblue);
+                transition: 0.3s;
+            }
+            
+            
+            #main {
+                display: block;
+                position: fixed;
+                height: 91%;
+                width: 60%;
+                padding-top: 20px;
+                padding-left: 20px;
+                margin-left: 340px;
+                
+            }
+            #game {
+                overflow-y: scroll;
+                border: solid;
+                padding-left: 5px;
+            }
+            #user-dice .die {
+                color: var(--b);
+            }
+            .player {
+                font-size: 35px;
+                padding: 10px 0px 10px 0px;
+            }
+            .dice-container {
+                position: absolute;
+                right: 10%;
+            }
+            .die {
+                color: var(--pail);
+                border-style: solid;
+                border-color: var(--b);
+                display: inline-block;
+                text-align: center;
+                width: 40px;
+                height: 40px;
+            }
+            #messages {
+                /* padding-top: 65px; */
+                /* display: block; */
+                overflow-y: scroll;
+                height: 37%;
+                bottom: 15%;
+                padding-left: 5px;
+                border-left: solid;
+                border-bottom: solid;
+                border-right: solid;
+            }
+            #chat-container {
+                position: fixed;
+                bottom: 10px;
+            }
+            #chat-container input {
+                border-radius: 15px;
+                background-color: var(--baige);
+                padding: 5px 5px; 
+                font-size: 15px;
+                width: 60%;
+                font-weight: 700;
+            }
+            #send {
+                margin-right: 5%;
+                font-size: 15px;
+                padding: 5px 5px; 
+                width: 20%;
+                bottom: 5%;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div id=header>
+            <ul>
+                <li><span class="e">fluff</span>
+                <li style="float:right"><span class="e">Julio</span></li>
+            </ul>
+        </div>
+        <div id="sidebar">
+            <div>
+                <h1>Current Bet</h1>
+                <h1>Placed By: <span id="curr-bet-player">Andrew</span></h1>
+                <h1>Quantity: <span id="curr-bet-quantity">4</span> dice</h1>
+                <h1>Value: <span id="curr-bet-value">5</span>'s</h1>
+                <div id="fluff-submit" class="button">Call Fluff</div>
+            </div>
+            
+            <div>
+                <h1 id="curr-turn">Your Turn</h1>
+                <div id="place-bet">
+                    <h1>
+                        Quantity: 
+                        <span id="quantity-down" class="down-arrow"></span>
+                        <span id="place-bet-quantity">4</span>
+                        <span id="quantity-up"class="up-arrow"></span>
+                    </h1>
+                    <h1>
+                        Value: 
+                        <span id="value-down" class="down-arrow"></span id="vdown">
+                        <span id="place-bet-value">5</span>'s
+                        <span id="value-up" class="up-arrow"></span>
+                    </h1>
+                </div>
+                <div id="bet-submit" class="button">Place Bet</div>
+            </div>
+        </div>
+        <div id="main">
+            <div id="game">
+                <div id="user-dice" class="player">
+                    <span class="player-name">Julio</span>
+                    <span class="dice-container">
+                        <span class="die">F</span>
+                        <span class="die">4</span>
+                        <span class="die">6</span>
+                        <span class="die">8</span>
+                        <span class="die">7</span>
+                    </span>
+                </div>
+                <div id="players">
+                    <div class="player">
+                        <span class="player-name">Andrew</span>
+                        <span class="dice-container">
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                        </span>
+                    </div>
+                    <div class="player">
+                        <span class="player-name">Danny</span>
+                        <span class="dice-container">
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                        </span>
+                    </div>
+                    <div class="player">
+                        <span class="player-name">Jonathan</span>
+                        <span class="dice-container">
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                        </span>
+                    </div>
+                    <div class="player">
+                        <span class="player-name">Sammy</span>
+                        <span class="dice-container">
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                        </span>
+                    </div>
+                    <div class="player">
+                        <span class="player-name">Jerry</span>
+                        <span class="dice-container">
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                            <span class="die">0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div id="messages">
+                <div class="message">Game: New Round! Click Roll to start!</div>
+                <div class="message">Game: It's Julio's turn</div>
+                <div class="message">Game: Julio bets four 5's</div>
+            </div>
+            <div id="chat-container">
+                <span>
+                    <input type="text" id="message_input" placeholder="Write a Message"/>
+                    <button id="send" class="button">Send</button>
+                </span>
+                <div id="chatlog"></div>
+            </div>
+        </div>
+        <div class="popup" id="login">
+            <div id="box">
+                <div id="enter-name">Welcome to Fluff! Enter NickName</div>
+                <div>
+                    <input type="text" id="name_input"/>
+                    <div id="name-submit" class="button">Go!</div>
+                </div>
+                <div id="message">
+
+                </div>
+            </div>
+    
+        </div>
+    </body>
+    <script>
+        // Global js variables
+        let name = "";
+        let turn = "";
+        // Event Listeners
+        document.getElementById("name-submit").addEventListener("click", login);
+        document.getElementById("value-down").addEventListener("click", decValue);
+        document.getElementById("value-up").addEventListener("click", incValue);
+        document.getElementById("quantity-down").addEventListener("click", decQuantity);
+        document.getElementById("quantity-up").addEventListener("click", incQuantity);
+
+
+        function login() {
+            document.getElementById("login").style.display = "none";
+        }
+        function decValue() {
+            let v = parseInt(document.getElementById("place-bet-value").innerHTML);
+            if (v != 2) {
+                document.getElementById("place-bet-value").innerHTML = v - 1;
+            }
+        }
+        function incValue() {
+            let v = parseInt(document.getElementById("place-bet-value").innerHTML);
+            if (v != 6) {
+                document.getElementById("place-bet-value").innerHTML = v + 1;
+            }
+        }
+        function decQuantity() {
+            let q = parseInt(document.getElementById("place-bet-quantity").innerHTML);
+            if (q != 0) {
+                document.getElementById("place-bet-quantity").innerHTML = q - 1;
+            }
+        }
+        function incQuantity() {
+            let q = parseInt(document.getElementById("place-bet-quantity").innerHTML);
+            document.getElementById("place-bet-quantity").innerHTML = q + 1;
+        }
+    </script>
+
+    
+</html>
