@@ -3,7 +3,7 @@
     <head>
         <title>fluff</title>
         <link href="https://fonts.googleapis.com/css2?family=Muli&display=swap" rel="stylesheet">
-        <!-- <script src="/socket.io/socket.io.js"></script> -->
+        <script src="/socket.io/socket.io.js"></script>
         <!-- <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script> -->
         <style>
             :root {
@@ -256,17 +256,17 @@
         </div>
         <div id="main">
             <div id="game">
-                <div id="user-dice" class="player">
-                    <span class="player-name">Julio</span>
-                    <span class="dice-container">
-                        <span class="die">F</span>
-                        <span class="die">4</span>
-                        <span class="die">6</span>
-                        <span class="die">8</span>
-                        <span class="die">7</span>
-                    </span>
-                </div>
                 <div id="players">
+                    <!-- <div id="user-dice" class="player">
+                        <span class="player-name">Julio</span>
+                        <span class="dice-container">
+                            <span class="die">W</span>
+                            <span class="die">4</span>
+                            <span class="die">6</span>
+                            <span class="die">8</span>
+                            <span class="die">7</span>
+                        </span>
+                    </div>
                     <div class="player">
                         <span class="player-name">Andrew</span>
                         <span class="dice-container">
@@ -316,7 +316,7 @@
                             <span class="die">0</span>
                             <span class="die">0</span>
                         </span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <div id="messages">
@@ -339,7 +339,7 @@
                     <input type="text" id="name_input"/>
                     <div id="name-submit" class="button">Go!</div>
                 </div>
-                <div id="message">
+                <div id="error">
 
                 </div>
             </div>
@@ -356,11 +356,11 @@
         document.getElementById("value-up").addEventListener("click", incValue);
         document.getElementById("quantity-down").addEventListener("click", decQuantity);
         document.getElementById("quantity-up").addEventListener("click", incQuantity);
+        document.getElementById("send").addEventListener("click", sendMessage);
+        
 
 
-        function login() {
-            document.getElementById("login").style.display = "none";
-        }
+        
         function decValue() {
             let v = parseInt(document.getElementById("place-bet-value").innerHTML);
             if (v != 2) {
@@ -382,6 +382,100 @@
         function incQuantity() {
             let q = parseInt(document.getElementById("place-bet-quantity").innerHTML);
             document.getElementById("place-bet-quantity").innerHTML = q + 1;
+        }
+
+        // socketio stuff
+        var socketio = io.connect();
+
+        
+
+
+
+        socketio.on("message_to_client",function(data) {
+            //Append an HR thematic break and the escaped HTML of the new message
+            let m = document.createElement("div");
+            m.classList.add("message");
+            m.innerHTML = data['message'];
+            document.getElementById("messages").appendChild(m);
+        });
+
+        function sendMessage(){
+            var msg = document.getElementById("message_input").value;
+            socketio.emit("message_to_server", {message:msg});
+        }
+
+        socketio.on("login_to_client",function(data) {
+            if (data.message == "success") {
+                if (name == data["name"]) {
+                    document.getElementById("login").style.display = "none";
+                    let box = document.createElement("div");
+                    box.setAttribute("id", "user-dice");
+                    box.classList.add("player");
+                    let nameSpan = document.createElement("span");
+                    nameSpan.classList.add("player-name");
+                    nameSpan.innerHTML = data['name'];
+                    box.appendChild(nameSpan);
+                    let dc = document.createElement("span");
+                    dc.classList.add("dice-container");
+                    let d1 = document.createElement("span");
+                    d1.classList.add("die");
+                    let d2 = document.createElement("span");
+                    d2.classList.add("die");
+                    let d3 = document.createElement("span");
+                    d3.classList.add("die");
+                    let d4 = document.createElement("span");
+                    d4.classList.add("die");
+                    let d5 = document.createElement("span");
+                    d5.classList.add("die");
+                    dc.appendChild(d1);
+                    dc.appendChild(d2);
+                    dc.appendChild(d3);
+                    dc.appendChild(d4);
+                    dc.appendChild(d5);
+                    box.appendChild(dc);
+                    document.getElementById("players").appendChild(box);
+                }
+                else {
+                    let box = document.createElement("div");
+                    box.classList.add("player");
+                    let nameSpan = document.createElement("span");
+                    nameSpan.classList.add("player-name");
+                    nameSpan.innerHTML = data['name'];
+                    box.appendChild(nameSpan);
+                    let dc = document.createElement("span");
+                    dc.classList.add("dice-container");
+                    let d1 = document.createElement("span");
+                    d1.classList.add("die");
+                    let d2 = document.createElement("span");
+                    d2.classList.add("die");
+                    let d3 = document.createElement("span");
+                    d3.classList.add("die");
+                    let d4 = document.createElement("span");
+                    d4.classList.add("die");
+                    let d5 = document.createElement("span");
+                    d5.classList.add("die");
+                    dc.appendChild(d1);
+                    dc.appendChild(d2);
+                    dc.appendChild(d3);
+                    dc.appendChild(d4);
+                    dc.appendChild(d5);
+                    box.appendChild(dc);
+                    document.getElementById("players").appendChild(box);
+                }
+                
+            }
+            else {
+                name = "";
+                document.getElementById("error").innerHTML = data["message"];
+            }
+
+        });
+        function login() {
+            let n = document.getElementById("name_input").value;
+            name = n;
+            socketio.emit("login_to_server", {name:n});
+            
+            // document.getElementById("login").style.display = "none";
         }
     </script>
 

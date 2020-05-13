@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jtrujillo-hga/fluff#readme",
   "dependencies": {
-    "fs": "0.0.1-security"
+    "fs": "0.0.1-security",
+    "socket.io": "^2.3.0"
   }
 }
