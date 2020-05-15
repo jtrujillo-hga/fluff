@@ -59,12 +59,6 @@
                 transition: 0.3s;
             }
             #login {
-                /* visibility: hidden; */
-                /* background-color: hsla(0, 100%, 100%, 0.47);
-                width: 100%;
-                height: 100%;
-                display: flex;*/
-                
                 height: 100%; 
                 width: 100%;
                 position: fixed; /* Stay in place */
@@ -74,7 +68,6 @@
                 /* /* background-color: rgb(0,0,0); Black fallback color */
                 background-color: hsla(0, 100%, 100%, 0.47); /*Black w/opacity*/
                 overflow-x: hidden; /* Disable horizontal scroll */
-                
             }
             #login #box {
                 position: relative;
@@ -125,6 +118,19 @@
                 left: 0;
                 z-index: 1;
             }
+            #curr-bet-container {
+                display: none;
+                /* display: block; */
+            }
+            #turn-container {
+                display: none;
+            }
+            #roll-submit {
+                margin: 5px;
+                margin-left: 10px;
+                display: none;
+                width: 40%;
+            }
             .up-arrow {
                 display: inline-block;
                 width: 0; 
@@ -165,6 +171,7 @@
                 overflow-y: scroll;
                 border: solid;
                 padding-left: 5px;
+                height: 57%;
             }
             #user-dice .die {
                 color: var(--b);
@@ -185,6 +192,7 @@
                 text-align: center;
                 width: 40px;
                 height: 40px;
+                margin-left: 5px;
             }
             #messages {
                 /* padding-top: 65px; */
@@ -223,19 +231,19 @@
         <div id=header>
             <ul>
                 <li><span class="e">fluff</span>
-                <li style="float:right"><span class="e">Julio</span></li>
+                <li style="float:right"><span id="username" class="e"></span></li>
             </ul>
         </div>
         <div id="sidebar">
-            <div>
+            <div id="curr-bet-container">
                 <h1>Current Bet</h1>
-                <h1>Placed By: <span id="curr-bet-player">Andrew</span></h1>
-                <h1>Quantity: <span id="curr-bet-quantity">4</span> dice</h1>
-                <h1>Value: <span id="curr-bet-value">5</span>'s</h1>
+                <h1>Placed By: <span id="curr-bet-player"></span></h1>
+                <h1>Quantity: <span id="curr-bet-quantity"></span> dice</h1>
+                <h1>Value: <span id="curr-bet-value"></span>'s</h1>
                 <div id="fluff-submit" class="button">Call Fluff</div>
             </div>
             
-            <div>
+            <div id="turn-container">
                 <h1 id="curr-turn">Your Turn</h1>
                 <div id="place-bet">
                     <h1>
@@ -253,6 +261,7 @@
                 </div>
                 <div id="bet-submit" class="button">Place Bet</div>
             </div>
+            <div id="roll-submit" class="button">Roll</div>
         </div>
         <div id="main">
             <div id="game">
@@ -320,9 +329,9 @@
                 </div>
             </div>
             <div id="messages">
-                <div class="message">Game: New Round! Click Roll to start!</div>
+                <!-- <div class="message">Game: New Round! Click Roll to start!</div>
                 <div class="message">Game: It's Julio's turn</div>
-                <div class="message">Game: Julio bets four 5's</div>
+                <div class="message">Game: Julio bets four 5's</div> -->
             </div>
             <div id="chat-container">
                 <span>
@@ -349,17 +358,20 @@
     <script>
         // Global js variables
         let name = "";
-        let turn = "";
         // Event Listeners
+        document.addEventListener("DOMContentLoaded", popPlayers, false);
         document.getElementById("name-submit").addEventListener("click", login);
         document.getElementById("value-down").addEventListener("click", decValue);
         document.getElementById("value-up").addEventListener("click", incValue);
         document.getElementById("quantity-down").addEventListener("click", decQuantity);
         document.getElementById("quantity-up").addEventListener("click", incQuantity);
         document.getElementById("send").addEventListener("click", sendMessage);
+        document.getElementById("roll-submit").addEventListener("click", startRoll);
+        document.getElementById("bet-submit").addEventListener("click", placeBet);
+
         
 
-
+        
         
         function decValue() {
             let v = parseInt(document.getElementById("place-bet-value").innerHTML);
@@ -384,10 +396,74 @@
             document.getElementById("place-bet-quantity").innerHTML = q + 1;
         }
 
+        function gameMessage(msg) {
+            let m = document.createElement("div");
+            m.classList.add("message");
+            m.innerHTML = "Game: " + msg;
+            document.getElementById("messages").appendChild(m);
+        }
+
+        document.getElementById("name_input").addEventListener('keypress', function (e) {
+            if (e.key == 'Enter') {
+                login();
+            }
+        });
+
         // socketio stuff
         var socketio = io.connect();
 
-        
+        function popPlayers() {
+            socketio.emit("players_to_server",{name:name});
+        }
+
+        socketio.on("players_to_client", function(data) {
+            console.log("in players to client");
+            console.log(data["users"]);
+            document.getElementById("players").innerHTML = "";
+            let p = data["users"];
+            for (let i=0; i<p.length; ++i) {
+                let box = document.createElement("div");
+                box.classList.add("player");
+                let nameSpan = document.createElement("span");
+                nameSpan.classList.add("player-name");
+                nameSpan.innerHTML = p[i].name;
+                box.appendChild(nameSpan);
+                let dc = document.createElement("span");
+                dc.classList.add("dice-container");
+                let d0 = document.createElement("span");
+                d0.classList.add("die");
+                let d1 = document.createElement("span");
+                d1.classList.add("die");
+                let d2 = document.createElement("span");
+                d2.classList.add("die");
+                let d3 = document.createElement("span");
+                d3.classList.add("die");
+                let d4 = document.createElement("span");
+                d4.classList.add("die");
+                dc.appendChild(d0);
+                dc.appendChild(d1);
+                dc.appendChild(d2);
+                dc.appendChild(d3);
+                dc.appendChild(d4);
+                box.appendChild(dc);
+                if (name == data["users"][i].name) {
+                    box.setAttribute("id", "user-dice");
+                    console.log("here");
+                    console.log(data["users"][i].dice);
+                    if (data["users"][i].dice.length == 5) {    
+                        if (data["users"][i].dice[0] != 0) {                 // if game has not started, dont reveal the dice values
+                            d0.innerHTML = data["users"][i].dice[0];
+                            d1.innerHTML = data["users"][i].dice[1];
+                            d2.innerHTML = data["users"][i].dice[2];
+                            d3.innerHTML = data["users"][i].dice[3];
+                            d4.innerHTML = data["users"][i].dice[4];
+                        }  
+                    }
+                }
+                document.getElementById("players").appendChild(box);
+            }
+            
+        }); 
 
 
 
@@ -395,87 +471,110 @@
             //Append an HR thematic break and the escaped HTML of the new message
             let m = document.createElement("div");
             m.classList.add("message");
-            m.innerHTML = data['message'];
+            m.innerHTML = data["name"] +  ": " + data['message'];
             document.getElementById("messages").appendChild(m);
         });
 
         function sendMessage(){
             var msg = document.getElementById("message_input").value;
-            socketio.emit("message_to_server", {message:msg});
+            socketio.emit("message_to_server", {name:name, message:msg});         
         }
 
         socketio.on("login_to_client",function(data) {
             if (data.message == "success") {
                 if (name == data["name"]) {
                     document.getElementById("login").style.display = "none";
-                    let box = document.createElement("div");
-                    box.setAttribute("id", "user-dice");
-                    box.classList.add("player");
-                    let nameSpan = document.createElement("span");
-                    nameSpan.classList.add("player-name");
-                    nameSpan.innerHTML = data['name'];
-                    box.appendChild(nameSpan);
-                    let dc = document.createElement("span");
-                    dc.classList.add("dice-container");
-                    let d1 = document.createElement("span");
-                    d1.classList.add("die");
-                    let d2 = document.createElement("span");
-                    d2.classList.add("die");
-                    let d3 = document.createElement("span");
-                    d3.classList.add("die");
-                    let d4 = document.createElement("span");
-                    d4.classList.add("die");
-                    let d5 = document.createElement("span");
-                    d5.classList.add("die");
-                    dc.appendChild(d1);
-                    dc.appendChild(d2);
-                    dc.appendChild(d3);
-                    dc.appendChild(d4);
-                    dc.appendChild(d5);
-                    box.appendChild(dc);
-                    document.getElementById("players").appendChild(box);
+                    document.getElementById("username").innerText = name;
+                    if (data["admin"]) {
+                        document.getElementById("roll-submit").style.display = "block";
+                    }
                 }
-                else {
-                    let box = document.createElement("div");
-                    box.classList.add("player");
-                    let nameSpan = document.createElement("span");
-                    nameSpan.classList.add("player-name");
-                    nameSpan.innerHTML = data['name'];
-                    box.appendChild(nameSpan);
-                    let dc = document.createElement("span");
-                    dc.classList.add("dice-container");
-                    let d1 = document.createElement("span");
-                    d1.classList.add("die");
-                    let d2 = document.createElement("span");
-                    d2.classList.add("die");
-                    let d3 = document.createElement("span");
-                    d3.classList.add("die");
-                    let d4 = document.createElement("span");
-                    d4.classList.add("die");
-                    let d5 = document.createElement("span");
-                    d5.classList.add("die");
-                    dc.appendChild(d1);
-                    dc.appendChild(d2);
-                    dc.appendChild(d3);
-                    dc.appendChild(d4);
-                    dc.appendChild(d5);
-                    box.appendChild(dc);
-                    document.getElementById("players").appendChild(box);
+                gameMessage(data["name"] + " has joined the game");
+                if (data["admin"]) {
+                    gameMessage(data["name"] + " is the admin. Once everyone has joined, " 
+                        + data["name"] + " must click Roll to begin the game.");
                 }
+                popPlayers();
                 
             }
             else {
                 name = "";
+                document.getElementById("name_input").value = "";
                 document.getElementById("error").innerHTML = data["message"];
             }
+            
 
         });
         function login() {
             let n = document.getElementById("name_input").value;
-            name = n;
-            socketio.emit("login_to_server", {name:n});
+            if (/\s+/g.test(n) || n=="") {
+                document.getElementById("name_input").value = "";
+                document.getElementById("error").innerHTML = "Nickname cant include spaces or special characters";
+            }
+            else {
+                name = n;
+                socketio.emit("login_to_server", {name:n});
+            }
+            
             
             // document.getElementById("login").style.display = "none";
+        }
+        socketio.on("start_roll_to_client", function(data) {
+            console.log("users:");
+            console.log(data["users"]);
+            console.log("firstTurn:");
+            console.log(data["firstTurn"]);
+            console.log("numWildArray");
+            console.log(data["numWildArray"]);
+            gameMessage(name + " has rolled the dice");
+            for(let i=0; i<data["numWildArray"].length; ++i) {
+                gameMessage(data["numWildArray"][i].name + " has rolled " + data["numWildArray"][i].numWild + " wilds.");
+            }
+            if (data["firstTurn"] == "") {
+                gameMessage("There was a tie for the most wilds. So " + data["admin"] + " must click 'Roll' again")
+            }
+            else {
+                document.getElementById("curr-bet-container").style.display = "block";
+                gameMessage(data["firstTurn"] + " will go first for rolling the most wilds");
+                if (name == data["admin"]) {
+                    document.getElementById("roll-submit").style.display = "none";
+                }
+                if (name == data["firstTurn"]) {
+                    document.getElementById("turn-container").style.display = "block";
+                }
+            }
+            popPlayers();
+        });
+
+        function startRoll() {
+            socketio.emit("start_roll_to_server", {name:name});
+        }
+
+        socketio.on("place_bet_to_client", function(data) {
+            if (data["valid"]) {
+                gameMessage(data["name"] + " bet that there are " + data["quantity"] + " " + data["value"] + "'s. This is a valid bet.");
+                gameMessage("It is " + data["newTurn"] + "'s turn now");
+                document.getElementById("curr-bet-player").innerHTML = data["name"];
+                document.getElementById("curr-bet-quantity").innerHTML = data["quantity"];
+                document.getElementById("curr-bet-value").innerHTML = data["value"];
+                if (name == data["name"]) {
+                    document.getElementById("turn-container").style.display = "none";
+                }
+                else if (name == data["newTurn"]) {
+                    document.getElementById("turn-container").style.display = "block";
+                }
+
+            }
+            else {
+                gameMessage(data["name"] + " bet that there are " + data["quantity"] + " " + data["value"] + "'s. This is an invalid bet.");
+                gameMessage(data["name"] + ", please place a valid bet. You can increase the quantity with any value or have the same quantity with the value increased");
+            }
+        });
+
+        function placeBet() {
+            let q = document.getElementById("place-bet-quantity").innerHTML;
+            let v = document.getElementById("place-bet-value").innerHTML;
+            socketio.emit("place_bet_to_server", {name:name, quantity:q, value:v});
         }
     </script>
 
