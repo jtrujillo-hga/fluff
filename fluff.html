@@ -103,7 +103,9 @@
             }
             #fluff-submit {
                 width: 40%;
+                display: none;
             }
+            
             #sidebar {
                 position: fixed;
                 border: 0;
@@ -173,9 +175,6 @@
                 padding-left: 5px;
                 height: 57%;
             }
-            #user-dice .die {
-                color: var(--b);
-            }
             .player {
                 font-size: 35px;
                 padding: 10px 0px 10px 0px;
@@ -185,7 +184,6 @@
                 right: 10%;
             }
             .die {
-                color: var(--pail);
                 border-style: solid;
                 border-color: var(--b);
                 display: inline-block;
@@ -240,8 +238,9 @@
                 <h1>Placed By: <span id="curr-bet-player"></span></h1>
                 <h1>Quantity: <span id="curr-bet-quantity"></span> dice</h1>
                 <h1>Value: <span id="curr-bet-value"></span>'s</h1>
-                <div id="fluff-submit" class="button">Call Fluff</div>
+                <h1>Total Wilds: <span id="total-wilds"></span></h1>
             </div>
+            <div id="fluff-submit" class="button">Call Fluff</div>
             
             <div id="turn-container">
                 <h1 id="curr-turn">Your Turn</h1>
@@ -249,13 +248,13 @@
                     <h1>
                         Quantity: 
                         <span id="quantity-down" class="down-arrow"></span>
-                        <span id="place-bet-quantity">4</span>
+                        <span id="place-bet-quantity">1</span>
                         <span id="quantity-up"class="up-arrow"></span>
                     </h1>
                     <h1>
                         Value: 
                         <span id="value-down" class="down-arrow"></span id="vdown">
-                        <span id="place-bet-value">5</span>'s
+                        <span id="place-bet-value">2</span>'s
                         <span id="value-up" class="up-arrow"></span>
                     </h1>
                 </div>
@@ -359,7 +358,7 @@
         // Global js variables
         let name = "";
         // Event Listeners
-        document.addEventListener("DOMContentLoaded", popPlayers, false);
+        document.addEventListener("DOMContentLoaded", function(){popPlayers("initial");}, false);
         document.getElementById("name-submit").addEventListener("click", login);
         document.getElementById("value-down").addEventListener("click", decValue);
         document.getElementById("value-up").addEventListener("click", incValue);
@@ -368,6 +367,7 @@
         document.getElementById("send").addEventListener("click", sendMessage);
         document.getElementById("roll-submit").addEventListener("click", startRoll);
         document.getElementById("bet-submit").addEventListener("click", placeBet);
+        document.getElementById("fluff-submit").addEventListener("click", callFluff);
 
         
 
@@ -387,7 +387,7 @@
         }
         function decQuantity() {
             let q = parseInt(document.getElementById("place-bet-quantity").innerHTML);
-            if (q != 0) {
+            if (q != 1) {
                 document.getElementById("place-bet-quantity").innerHTML = q - 1;
             }
         }
@@ -401,6 +401,11 @@
             m.classList.add("message");
             m.innerHTML = "Game: " + msg;
             document.getElementById("messages").appendChild(m);
+            updateScroll();
+        }
+        function updateScroll(){
+            var element = document.getElementById("messages");
+            element.scrollTop = element.scrollHeight;
         }
 
         document.getElementById("name_input").addEventListener('keypress', function (e) {
@@ -412,56 +417,88 @@
         // socketio stuff
         var socketio = io.connect();
 
-        function popPlayers() {
-            socketio.emit("players_to_server",{name:name});
+        function popPlayers(state) {
+            socketio.emit("players_to_server",{name:name, state:state});
         }
 
         socketio.on("players_to_client", function(data) {
-            console.log("in players to client");
-            console.log(data["users"]);
-            document.getElementById("players").innerHTML = "";
-            let p = data["users"];
-            for (let i=0; i<p.length; ++i) {
-                let box = document.createElement("div");
-                box.classList.add("player");
-                let nameSpan = document.createElement("span");
-                nameSpan.classList.add("player-name");
-                nameSpan.innerHTML = p[i].name;
-                box.appendChild(nameSpan);
-                let dc = document.createElement("span");
-                dc.classList.add("dice-container");
-                let d0 = document.createElement("span");
-                d0.classList.add("die");
-                let d1 = document.createElement("span");
-                d1.classList.add("die");
-                let d2 = document.createElement("span");
-                d2.classList.add("die");
-                let d3 = document.createElement("span");
-                d3.classList.add("die");
-                let d4 = document.createElement("span");
-                d4.classList.add("die");
-                dc.appendChild(d0);
-                dc.appendChild(d1);
-                dc.appendChild(d2);
-                dc.appendChild(d3);
-                dc.appendChild(d4);
-                box.appendChild(dc);
-                if (name == data["users"][i].name) {
-                    box.setAttribute("id", "user-dice");
-                    console.log("here");
-                    console.log(data["users"][i].dice);
-                    if (data["users"][i].dice.length == 5) {    
-                        if (data["users"][i].dice[0] != 0) {                 // if game has not started, dont reveal the dice values
-                            d0.innerHTML = data["users"][i].dice[0];
-                            d1.innerHTML = data["users"][i].dice[1];
-                            d2.innerHTML = data["users"][i].dice[2];
-                            d3.innerHTML = data["users"][i].dice[3];
-                            d4.innerHTML = data["users"][i].dice[4];
-                        }  
+            // let condition1 = false;
+            // if (data["state"] == "login") {
+            //     condition1 = (data["name"] == "");
+            // }
+            // else if (data["state"] == "startroll" || data["state"] == "fluff") {
+            //     condition1 = true;
+            // }
+            // if (condition1) {
+                // console.log("in players to client");
+                document.getElementById("players").innerHTML = "";
+                let p = data["users"];
+                for (let i=0; i<p.length; ++i) {
+                    let box = document.createElement("div");
+                    box.classList.add("player");
+                    let nameSpan = document.createElement("span");
+                    nameSpan.classList.add("player-name");
+                    nameSpan.innerHTML = p[i].name;
+                    box.appendChild(nameSpan);
+                    let dc = document.createElement("span");
+                    dc.classList.add("dice-container");
+                    let d0 = document.createElement("span");
+                    d0.classList.add("die");
+                    let d1 = document.createElement("span");
+                    d1.classList.add("die");
+                    let d2 = document.createElement("span");
+                    d2.classList.add("die");
+                    let d3 = document.createElement("span");
+                    d3.classList.add("die");
+                    let d4 = document.createElement("span");
+                    d4.classList.add("die");
+                    dc.appendChild(d0);
+                    dc.appendChild(d1);
+                    dc.appendChild(d2);
+                    dc.appendChild(d3);
+                    dc.appendChild(d4);
+                    box.appendChild(dc);
+                    // console.log("children");
+                    // console.log(dc.childNodes); 
+                    let die = dc.childNodes;
+                    for (let j = 0; j < die.length; ++j) {
+                        if (data["state"] == "fluff") {
+                            // console.log("here2")
+                            // console.log(data["users"][i]);
+                            die[j].innerHTML = data["users"][i].dice[j];
+                        }
+                        else {
+                            // console.log("here3")
+                            if (data["users"][i].dice[j] == 'X') {
+                                die[j].innerHTML = data["users"][i].dice[j];
+                            }
+                            else if (name == data["users"][i].name && data["users"][i].dice[j] != 0) {
+                                die[j].innerHTML = data["users"][i].dice[j];
+                            }
+                        }
                     }
+                    if (name == data["users"][i].name) {
+                        box.setAttribute("id", "user-dice");
+                    }
+                    
+                    // if (name == data["users"][i].name) {
+                    //     box.setAttribute("id", "user-dice");
+                    //     console.log("here");
+                    //     console.log(data["users"][i].dice);
+                    //     if (data["users"][i].dice.length == 5) {    
+                    //         if (data["users"][i].dice[0] != 0) {                 // if game has not started, dont reveal the dice values
+                    //             d0.innerHTML = data["users"][i].dice[0];
+                    //             d1.innerHTML = data["users"][i].dice[1];
+                    //             d2.innerHTML = data["users"][i].dice[2];
+                    //             d3.innerHTML = data["users"][i].dice[3];
+                    //             d4.innerHTML = data["users"][i].dice[4];
+                    //         }  
+                    //     }
+                    // }
+                    document.getElementById("players").appendChild(box);
                 }
-                document.getElementById("players").appendChild(box);
-            }
+            // }
+            
             
         }); 
 
@@ -473,6 +510,7 @@
             m.classList.add("message");
             m.innerHTML = data["name"] +  ": " + data['message'];
             document.getElementById("messages").appendChild(m);
+            updateScroll();
         });
 
         function sendMessage(){
@@ -488,13 +526,15 @@
                     if (data["admin"]) {
                         document.getElementById("roll-submit").style.display = "block";
                     }
+                    popPlayers("login");
                 }
                 gameMessage(data["name"] + " has joined the game");
                 if (data["admin"]) {
                     gameMessage(data["name"] + " is the admin. Once everyone has joined, " 
                         + data["name"] + " must click Roll to begin the game.");
                 }
-                popPlayers();
+
+                
                 
             }
             else {
@@ -520,21 +560,24 @@
             // document.getElementById("login").style.display = "none";
         }
         socketio.on("start_roll_to_client", function(data) {
-            console.log("users:");
-            console.log(data["users"]);
-            console.log("firstTurn:");
-            console.log(data["firstTurn"]);
-            console.log("numWildArray");
-            console.log(data["numWildArray"]);
+            // console.log("users:");
+            // console.log(data["users"]);
+            // console.log("firstTurn:");
+            // console.log(data["firstTurn"]);
+            // console.log("numWildArray");
+            // console.log(data["numWildArray"]);
             gameMessage(name + " has rolled the dice");
-            for(let i=0; i<data["numWildArray"].length; ++i) {
-                gameMessage(data["numWildArray"][i].name + " has rolled " + data["numWildArray"][i].numWild + " wilds.");
-            }
+            
             if (data["firstTurn"] == "") {
                 gameMessage("There was a tie for the most wilds. So " + data["admin"] + " must click 'Roll' again")
             }
             else {
+                for(let i=0; i<data["numWildArray"].length; ++i) {
+                    gameMessage(data["numWildArray"][i].name + " has rolled " + data["numWildArray"][i].numWild + " wilds.");
+                }
                 document.getElementById("curr-bet-container").style.display = "block";
+                document.getElementById("total-wilds").innerHTML = data["totalWild"];
+                gameMessage("There are " + data["totalWild"] + " total wilds");
                 gameMessage(data["firstTurn"] + " will go first for rolling the most wilds");
                 if (name == data["admin"]) {
                     document.getElementById("roll-submit").style.display = "none";
@@ -542,8 +585,13 @@
                 if (name == data["firstTurn"]) {
                     document.getElementById("turn-container").style.display = "block";
                 }
+                document.getElementById("curr-bet-player").innerHTML = "";
+                document.getElementById("curr-bet-quantity").innerHTML = "";
+                document.getElementById("curr-bet-value").innerHTML = "";
             }
-            popPlayers();
+            if (data["name"] == name) {
+                popPlayers("startroll");
+            }
         });
 
         function startRoll() {
@@ -559,10 +607,17 @@
                 document.getElementById("curr-bet-value").innerHTML = data["value"];
                 if (name == data["name"]) {
                     document.getElementById("turn-container").style.display = "none";
+                    document.getElementById("fluff-submit").style.display = "none";
                 }
                 else if (name == data["newTurn"]) {
                     document.getElementById("turn-container").style.display = "block";
+                    document.getElementById("fluff-submit").style.display = "block";
                 }
+                else {
+                    document.getElementById("fluff-submit").style.display = "block";
+                }
+                document.getElementById("place-bet-quantity").innerHTML = data["quantity"];
+                document.getElementById("place-bet-value").innerHTML = data["value"];
 
             }
             else {
@@ -576,7 +631,43 @@
             let v = document.getElementById("place-bet-value").innerHTML;
             socketio.emit("place_bet_to_server", {name:name, quantity:q, value:v});
         }
+
+        socketio.on('call_fluff_to_client', function(data) {
+            gameMessage(data["pFluff"] + " called fluff on " + data["pBet"] + "'s bet of " + data["curBet"].quantity + " " + data["curBet"].value + "'s.");
+            gameMessage("There are a total of " + data["trueCount"] + " " + data["curBet"].value + "'s (including wilds).");
+            if (data["loss"] == data["pBet"]) {
+                gameMessage(data["loss"] + " loses a die for fluffing.");
+            }
+            else if (data["loss"] == data["pFluff"]) {
+                if (data["lossAmmount"] == 1) {
+                    gameMessage(data["loss"] + " loses a die for calling fluff incorrectly.");
+                }
+                else if (data["lossAmmount"] == 2) {
+                    gameMessage(data["loss"] + " loses 2 dice for calling fluff incorrectly and for calling fluff out of turn.");
+                }
+            }
+            if (data["eliminated"] != "") {
+                gameMessage(data["eliminated"] + " is now out of the game for having 0 dice left");
+            }
+            if (name == data["pFluff"]){ 
+                popPlayers("fluff");
+            }
+            if (name == data["admin"]) {
+                document.getElementById("roll-submit").style.display = "block";
+            }
+            if (data["winner"] != "") {
+                gameMessage(data["winner"] + " is the winner!!!");
+            }
+            else {
+                gameMessage(data["admin"] + " must click 'Roll' to start the next round");
+            }
+            document.getElementById("turn-container").style.display = "none";
+            document.getElementById("curr-bet-container").style.display = "none";
+            document.getElementById("fluff-submit").style.display = "none";
+        });
+        function callFluff() {
+            socketio.emit("call_fluff_to_server", {name:name});
+        }
     </script>
 
-    
 </html>

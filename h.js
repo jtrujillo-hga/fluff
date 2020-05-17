@@ -6,7 +6,33 @@ let users = [];
 let admin = "";
 let turn = 0;
 let rollReady = true;
-let curBet = {name:"", quantity:0, value:0};
+let curBet = {name:"", index: 0, quantity:0, value:0};
+let gameOn = false;
+
+function getDiceCount(n) {
+	let tbr = 0;
+	for (let i=0; i<users.length; ++i) {
+		for (let j=0; j<users[i].dice.length; ++j) {
+			if (users[i].dice[j] == n || users[i].dice[j] == 'W') {
+				tbr++;
+			}
+		}
+	}
+	return tbr;
+}
+
+function nameToIndex(name) {
+	for (let i=0; i<users.length; ++i) {
+		if (users[i].name == name) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+
+
 // Listen for HTTP connections. 
 var app = http.createServer(function(req, resp){
 	fs.readFile("fluff.html", function(err, data){
@@ -27,25 +53,36 @@ io.sockets.on("connection", function(socket){
 	});
 
 	socket.on('login_to_server', function(data) {
-		console.log("length: ");
-		console.log(users.length);
-		let s = true;
 		let a = false;
-		for (let u=0; u<users.length; ++u) {
-			console.log(users[u]);
-			if (data["name"] == users[u].name) {
-				s = false;
-				io.sockets.emit("login_to_client",{name:data["name"], message:"Nickname is already used. Try a different one", admin:a});
+		if (gameOn==false) {
+			console.log("length: ");
+			console.log(users.length);
+			let s = true;
+			
+			for (let u=0; u<users.length; ++u) {
+				console.log(users[u]);
+				if (data["name"] == users[u].name) {
+					s = false;
+					
+				}
 			}
-		}
-		if (s) {
-			if (users.length == 0) {
-				admin = data["name"];
-				a = true;
+			if (s) {
+				if (users.length == 0) {
+					admin = data["name"];
+					a = true;
+				}
+				users.push({name:data["name"],dice:[0,0,0,0,0],numDice:5});
+				io.sockets.emit("login_to_client", {name:data["name"], message:"success", admin:a});
 			}
-			users.push({name:data["name"],dice:[0,0,0,0,0]});
-			io.sockets.emit("login_to_client", {name:data["name"], message:"success", admin:a});
+			else {
+				io.sockets.emit("login_to_client", {name:data["name"], message:"name is already taken", admin:a});
+			}
+			
 		}
+		else {
+			io.sockets.emit("login_to_client",{name:data["name"], message:"game is already in progress", admin:a});
+		}
+		
 		
 	});
 
@@ -60,27 +97,35 @@ io.sockets.on("connection", function(socket){
 		// }
 		// io.sockets.emit("players_to_client", {players:n, dice:d, name:data["name"]});
 		
-		io.sockets.emit("players_to_client", {users:users});
+		io.sockets.emit("players_to_client", {name:data["name"], users:users, state:data["state"]});
 		
 		
 	});
 
 	socket.on('start_roll_to_server', function(data){
 		if (data["name"] == admin && rollReady) {
+			if (gameOn == false) {
+				gameOn = true;
+			}
 			let numWildArray = [];
+			let totalWild = 0;
 			let firstTurnIndex = [0];
 			for (let i=0; i<users.length; ++i) {
 				let numWild = 0;
 				for (let j=0; j<5; ++j) {
-					if (users[i].dice[j] != "X") {
+					if (j < users[i].numDice){
 						let diceRoll = Math.floor(Math.random()*6) + 1;
 						if (diceRoll == 1) {
 							users[i].dice[j] = "W";
 							numWild++;
+							totalWild++;
 						}
 						else {
 							users[i].dice[j] = diceRoll;
 						}
+					}
+					else {
+						users[i].dice[j] = "X";
 					}
 				}
 				numWildArray.push({name:users[i].name, numWild:numWild});
@@ -93,36 +138,119 @@ io.sockets.on("connection", function(socket){
 					}
 				}
 			}
+			
+			console.log(users);
 			if (firstTurnIndex.length != 1) {
-				io.sockets.emit('start_roll_to_client', {firstTurn:"", numWildArray:numWildArray, users:users, admin:admin});
+				io.sockets.emit('start_roll_to_client', {totalWild:totalWild, name:data["name"], firstTurn:"", numWildArray:numWildArray, users:users, admin:admin});
 			}
 			else {
+				curBet = {name:"", index: 0, quantity:0, value:0};
 				rollReady = false;
 				turn = firstTurnIndex[0];
-				io.sockets.emit('start_roll_to_client', {firstTurn:users[firstTurnIndex[0]].name, numWildArray:numWildArray, users:users, admin:admin});
+				io.sockets.emit('start_roll_to_client', {totalWild:totalWild, name:data["name"], firstTurn:users[firstTurnIndex[0]].name, numWildArray:numWildArray, users:users, admin:admin});
 			}
 		}
 	});
 	socket.on('place_bet_to_server', function(data) {
 		if (users[turn].name == data["name"]) {
-			if (data["quantity"] > curBet.quantity) {
-				curBet = {name:data["name"], quantity:data["quantity"], value:data["value"]};
-				if (turn != users.length - 1) {
-					turn = turn + 1;
-				}
-				else {
-					turn = 0;
-				}
-				
+			if (parseInt(data["quantity"]) > curBet.quantity) {
+				console.log("here")
+				console.log("quantity of current bid")
+				console.log(curBet.quantity)
+				console.log("value of current bid")
+				console.log(curBet.value)
+				console.log("quantity of user bid")
+				console.log(data["quantity"])
+				console.log("value of user bid")
+				console.log(data["value"])
+				curBet = {name:data["name"], index:turn, quantity:data["quantity"], value:data["value"]};
+				// if (turn != users.length - 1) {
+				// 	turn = turn + 1;
+				// }
+				// else {
+				// 	turn = 0;
+				// }
+				turn = (turn+1)%(users.length);
 				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
 			}
-			else if (data["quantity"] == curBet.quantity && data["value"] > curBet.value) {
-				curBet = {name:data["name"], quantity:data["quantity"], value:data["value"]};
+			else if (parseInt(data["quantity"]) == curBet.quantity && parseInt(data["value"]) > curBet.value) {
+				curBet = {name:data["name"], index:turn, quantity:data["quantity"], value:data["value"]};
+				// if (turn != users.length - 1) {
+				// 	turn = turn + 1;
+				// }
+				// else {
+				// 	turn = 0;
+				// }
+				turn = (turn+1)%(users.length);
 				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
+
 			}
 			else {
+				console.log("here1")
+				console.log("quantity of current bid")
+				console.log(curBet.quantity)
+				console.log("value of current bid")
+				console.log(curBet.value)
+				console.log("quantity of user bid")
+				console.log(data["quantity"])
+				console.log("value of user bid")
+				console.log(data["value"])
 				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:false, newTurn:""});
 			}
+		}
+	});
+
+	socket.on('call_fluff_to_server', function(data) {
+		let pBet = users[curBet.index].name;
+		let pBetIndex = curBet.index;
+		let pFluff = data["name"];
+		let pFluffIndex = nameToIndex(pFluff);
+		let eliminated = "";
+		let loss = "";
+		let lossAmmount = 0;
+		let winner = "";
+		if (pBet != pFluff) {
+			let trueCount = getDiceCount(curBet.value);
+			console.log("trueCount")
+			console.log(trueCount)
+			console.log("curBet.quantity")
+			console.log(curBet.quantity)
+			if (curBet.quantity <= trueCount) {
+				console.log("person called fluff loses")
+				loss = users[pFluffIndex].name;
+				console.log("difference")
+				console.log(pFluffIndex - pBetIndex);
+				if (pFluffIndex - pBetIndex == 1 || pFluffIndex - pBetIndex == (-1)*users.length+1) {
+					users[pFluffIndex].numDice--;
+					lossAmmount = 1;
+				}
+				else {
+					users[pFluffIndex].numDice = users[pFluffIndex].numDice - 2;
+					lossAmmount = 2;
+				}
+				if (users[pFluffIndex].numDice < 1) {
+					eliminated = loss;
+					users.splice(pFluffIndex, 1);
+				}
+			}
+			else {
+				console.log("person that bet too high lost")
+				loss = users[pBetIndex].name;
+				users[pBetIndex].numDice--;
+				lossAmmount = 1;
+				if (users[pBetIndex].numDice < 1) {
+					eliminated = loss;
+					users.splice(pBetIndex, 1);
+				}
+			}
+			if (users.length == 1) {
+				winner = users[0].name;
+				gameOn = false;
+			}
+			rollReady = true;
+			let curBetCopy = curBet;
+			curBet = {name:"", index: 0, quantity:0, value:0};
+			io.sockets.emit('call_fluff_to_client', {winner:winner, admin:admin, pFluff:pFluff, pBet:pBet, loss:loss, lossAmmount:lossAmmount, eliminated:eliminated, curBet:curBetCopy, trueCount:trueCount});
 		}
 	});
 })
