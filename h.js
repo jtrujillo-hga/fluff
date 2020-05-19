@@ -97,7 +97,7 @@ io.sockets.on("connection", function(socket){
 		// }
 		// io.sockets.emit("players_to_client", {players:n, dice:d, name:data["name"]});
 		
-		io.sockets.emit("players_to_client", {name:data["name"], users:users, state:data["state"]});
+		io.sockets.emit("players_to_client", {name:data["name"], users:users, state:data["state"],admin:admin});
 		
 		
 	});
@@ -195,7 +195,7 @@ io.sockets.on("connection", function(socket){
 				console.log(data["quantity"])
 				console.log("value of user bid")
 				console.log(data["value"])
-				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:false, newTurn:""});
+				io.sockets.emit('place_bet_to_client', {users:users, name:data["name"], quantity:data["quantity"], value:data["value"], valid:false, newTurn:""});
 			}
 		}
 	});
@@ -252,5 +252,25 @@ io.sockets.on("connection", function(socket){
 			curBet = {name:"", index: 0, quantity:0, value:0};
 			io.sockets.emit('call_fluff_to_client', {winner:winner, admin:admin, pFluff:pFluff, pBet:pBet, loss:loss, lossAmmount:lossAmmount, eliminated:eliminated, curBet:curBetCopy, trueCount:trueCount});
 		}
+	});
+ 	socket.on('kick_to_server', function(data){
+		if(admin==data["name"]){ 
+	    	let i= nameToIndex(data["kickName"]);
+			if(i==-1) {
+				console.log("name not found")
+			}
+			else {
+				let isTurn = false;
+				if (turn == i) {
+					isTurn = true;
+					turn = (turn+1)%(users.length);
+					
+				}
+				console.log("turn:");
+				console.log(turn);
+				users.splice(i,1);
+				io.sockets.emit('kick_to_client',{kickName:data["kickName"], isTurn:isTurn, next:users[turn].name});
+			}
+	  	}
 	});
 })

@@ -119,6 +119,7 @@
                 padding-bottom: 30px;
                 left: 0;
                 z-index: 1;
+		overflow-y: auto;
             }
             #curr-bet-container {
                 display: none;
@@ -179,6 +180,12 @@
                 font-size: 35px;
                 padding: 10px 0px 10px 0px;
             }
+	    .button.kick-submit{
+	     	padding: 6px 15px;
+    		position: relative;
+    		bottom: 7px;
+    		font-size: 12px;
+	    }
             .dice-container {
                 float: right;
                 padding-right: 10px;
@@ -440,6 +447,15 @@
                     nameSpan.classList.add("player-name");
                     nameSpan.innerHTML = p[i].name;
                     box.appendChild(nameSpan);
+                    if(name==data["admin"] && p[i].name != data["admin"]){
+                        let kickSpan = document.createElement("span");
+                        kickSpan.innerHTML ="Kick";
+                        kickSpan.classList.add("button");
+                        kickSpan.classList.add("kick-submit");
+                        kickSpan.addEventListener("click",kick);
+                        box.appendChild(kickSpan);
+                    }
+
                     let dc = document.createElement("span");
                     dc.classList.add("dice-container");
                     let d0 = document.createElement("span");
@@ -525,6 +541,7 @@
                     document.getElementById("username").innerText = name;
                     if (data["admin"]) {
                         document.getElementById("roll-submit").style.display = "block";
+
                     }
                     popPlayers("login");
                 }
@@ -538,9 +555,11 @@
                 
             }
             else {
-                name = "";
-                document.getElementById("name_input").value = "";
-                document.getElementById("error").innerHTML = data["message"];
+	            if (data.message == "success") {
+ 		            name = "";
+                    document.getElementById("name_input").value = "";
+                    document.getElementById("error").innerHTML = data["message"];
+		        }       
             }
             
 
@@ -614,7 +633,11 @@
                     document.getElementById("fluff-submit").style.display = "block";
                 }
                 else {
-                    document.getElementById("fluff-submit").style.display = "block";
+                    for (p in data["users"]) {
+                        if (p.name == name) {
+                            document.getElementById("fluff-submit").style.display = "block";
+                        }
+                    }
                 }
                 document.getElementById("place-bet-quantity").innerHTML = data["quantity"];
                 document.getElementById("place-bet-value").innerHTML = data["value"];
@@ -667,6 +690,26 @@
         });
         function callFluff() {
             socketio.emit("call_fluff_to_server", {name:name});
+        }
+        socketio.on('kick_to_client',function(data){
+            gameMessage(data["kickName"]+" has been kicked");
+            if(name==data["kickName"]){
+                document.getElementById("fluff-submit").style.display = "none";
+                document.getElementById("turn-container").style.display = "none";
+                name == "";
+            }
+            if (data["isTurn"]) {
+                gameMessage("Since it was " + data["kickName"] + "'s turn, it is now " + data["next"] +"'s turn.");
+                if(name == data["next"]) {
+                    document.getElementById("turn-container").style.display = "block";
+                    document.getElementById("fluff-submit").style.display = "block";
+                }
+            }
+            popPlayers("kick");
+        });
+	    function kick() {
+		    let kickName = event.target.parentElement.firstChild.innerHTML; 
+	        socketio.emit("kick_to_server", {name:name,kickName:kickName});
         }
     </script>
 
