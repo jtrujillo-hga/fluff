@@ -268,6 +268,12 @@
                 <div id="bet-submit" class="button">Place Bet</div>
             </div>
             <div id="roll-submit" class="button">Roll</div>
+            <h1 id="dice-count-container">
+                Dice Count: 
+                <span id="dice-down" class="down-arrow"></span>
+                <span id="place-dice-count">5</span>
+                <span id="dice-up"class="up-arrow"></span>
+            </h1>
         </div>
         <div id="main">
             <div id="game">
@@ -429,15 +435,6 @@
         }
 
         socketio.on("players_to_client", function(data) {
-            // let condition1 = false;
-            // if (data["state"] == "login") {
-            //     condition1 = (data["name"] == "");
-            // }
-            // else if (data["state"] == "startroll" || data["state"] == "fluff") {
-            //     condition1 = true;
-            // }
-            // if (condition1) {
-                // console.log("in players to client");
                 document.getElementById("players").innerHTML = "";
                 let p = data["users"];
                 for (let i=0; i<p.length; ++i) {
@@ -474,19 +471,20 @@
                     dc.appendChild(d3);
                     dc.appendChild(d4);
                     box.appendChild(dc);
-                    // console.log("children");
-                    // console.log(dc.childNodes); 
                     let die = dc.childNodes;
                     for (let j = 0; j < die.length; ++j) {
                         if (data["state"] == "fluff") {
-                            // console.log("here2")
-                            // console.log(data["users"][i]);
-                            die[j].innerHTML = data["users"][i].dice[j];
+                            if (data["users"][i].dice[j] == 'X' || data["users"][i].dice[j] == '0') {
+                                die[j].style.display = "none";
+                            }
+                            else {
+                                die[j].innerHTML = data["users"][i].dice[j];
+                            }
+                            
                         }
                         else {
-                            // console.log("here3")
-                            if (data["users"][i].dice[j] == 'X') {
-                                die[j].innerHTML = data["users"][i].dice[j];
+                            if (data["users"][i].dice[j] == 'X' || data["users"][i].dice[j] == '0') {
+                                die[j].style.display = "none";
                             }
                             else if (name == data["users"][i].name && data["users"][i].dice[j] != 0) {
                                 die[j].innerHTML = data["users"][i].dice[j];
@@ -496,21 +494,6 @@
                     if (name == data["users"][i].name) {
                         box.setAttribute("id", "user-dice");
                     }
-                    
-                    // if (name == data["users"][i].name) {
-                    //     box.setAttribute("id", "user-dice");
-                    //     console.log("here");
-                    //     console.log(data["users"][i].dice);
-                    //     if (data["users"][i].dice.length == 5) {    
-                    //         if (data["users"][i].dice[0] != 0) {                 // if game has not started, dont reveal the dice values
-                    //             d0.innerHTML = data["users"][i].dice[0];
-                    //             d1.innerHTML = data["users"][i].dice[1];
-                    //             d2.innerHTML = data["users"][i].dice[2];
-                    //             d3.innerHTML = data["users"][i].dice[3];
-                    //             d4.innerHTML = data["users"][i].dice[4];
-                    //         }  
-                    //     }
-                    // }
                     document.getElementById("players").appendChild(box);
                 }
             // }

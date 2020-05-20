@@ -8,6 +8,7 @@ let turn = 0;
 let rollReady = true;
 let curBet = {name:"", index: 0, quantity:0, value:0};
 let gameOn = false;
+let diceSize=5;
 
 function getDiceCount(n) {
 	let tbr = 0;
@@ -87,16 +88,6 @@ io.sockets.on("connection", function(socket){
 	});
 
 	socket.on('players_to_server', function(data){
-		// let n = [];
-		// let d = [];
-		// for (let i=0; i<users.length; ++i) {
-		// 	n.push(users[i].name);
-		// 	if (users[i].name == data["name"]) {
-		// 		d = users[i].dice;
-		// 	}
-		// }
-		// io.sockets.emit("players_to_client", {players:n, dice:d, name:data["name"]});
-		
 		io.sockets.emit("players_to_client", {name:data["name"], users:users, state:data["state"],admin:admin});
 		
 		
@@ -113,7 +104,7 @@ io.sockets.on("connection", function(socket){
 			for (let i=0; i<users.length; ++i) {
 				let numWild = 0;
 				for (let j=0; j<5; ++j) {
-					if (j < users[i].numDice){
+					if (j >= 5-users[i].numDice){
 						let diceRoll = Math.floor(Math.random()*6) + 1;
 						if (diceRoll == 1) {
 							users[i].dice[j] = "W";
