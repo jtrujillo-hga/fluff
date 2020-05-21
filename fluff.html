@@ -88,7 +88,7 @@
                 background-color: var(--pail);
                 padding: 20px 15px; 
                 font-size: 45px;
-                width: 80%;
+                width: 60%;
                 color: var(--o);
                 font-weight: 700;
                 text-align: center;
@@ -101,6 +101,7 @@
             #name-submit {
                 width: 10%;
             }
+            
             #fluff-submit {
                 width: 40%;
                 display: none;
@@ -119,7 +120,7 @@
                 padding-bottom: 30px;
                 left: 0;
                 z-index: 1;
-		overflow-y: auto;
+		        overflow-y: auto;
             }
             #curr-bet-container {
                 display: none;
@@ -133,6 +134,9 @@
                 margin-left: 10px;
                 display: none;
                 width: 40%;
+            }
+            #dice-count-container {
+                display: none;
             }
             .up-arrow {
                 display: inline-block;
@@ -359,6 +363,7 @@
                 <div>
                     <input type="text" id="name_input"/>
                     <div id="name-submit" class="button">Go!</div>
+                    <div id="spectate-submit" class="button">Spectate</div>
                 </div>
                 <div id="error">
 
@@ -377,15 +382,14 @@
         document.getElementById("value-up").addEventListener("click", incValue);
         document.getElementById("quantity-down").addEventListener("click", decQuantity);
         document.getElementById("quantity-up").addEventListener("click", incQuantity);
+        document.getElementById("dice-up").addEventListener("click", incDiceCount);
+        document.getElementById("dice-down").addEventListener("click", decDiceCount);
         document.getElementById("send").addEventListener("click", sendMessage);
         document.getElementById("roll-submit").addEventListener("click", startRoll);
         document.getElementById("bet-submit").addEventListener("click", placeBet);
         document.getElementById("fluff-submit").addEventListener("click", callFluff);
+        document.getElementById("spectate-submit").addEventListener("click", spectate);
 
-        
-
-        
-        
         function decValue() {
             let v = parseInt(document.getElementById("place-bet-value").innerHTML);
             if (v != 2) {
@@ -408,6 +412,18 @@
             let q = parseInt(document.getElementById("place-bet-quantity").innerHTML);
             document.getElementById("place-bet-quantity").innerHTML = q + 1;
         }
+        function incDiceCount() {
+            let d = parseInt(document.getElementById("place-dice-count").innerHTML);
+            if (d != 5) {
+                document.getElementById("place-dice-count").innerHTML = d + 1;
+            }
+        }
+        function decDiceCount() {
+            let d = parseInt(document.getElementById("place-dice-count").innerHTML);
+            if (d != 1) {
+                document.getElementById("place-dice-count").innerHTML = d - 1;
+            }
+        }
 
         function gameMessage(msg) {
             let m = document.createElement("div");
@@ -419,6 +435,10 @@
         function updateScroll(){
             var element = document.getElementById("messages");
             element.scrollTop = element.scrollHeight;
+        }
+
+        function spectate() {
+            document.getElementById("login").style.display = "none";
         }
 
         document.getElementById("name_input").addEventListener('keypress', function (e) {
@@ -524,6 +544,7 @@
                     document.getElementById("username").innerText = name;
                     if (data["admin"]) {
                         document.getElementById("roll-submit").style.display = "block";
+                        document.getElementById("dice-count-container").style.display = "block";
 
                     }
                     popPlayers("login");
@@ -583,6 +604,7 @@
                 gameMessage(data["firstTurn"] + " will go first for rolling the most wilds");
                 if (name == data["admin"]) {
                     document.getElementById("roll-submit").style.display = "none";
+                    document.getElementById("dice-count-container").style.display = "none";
                 }
                 if (name == data["firstTurn"]) {
                     document.getElementById("turn-container").style.display = "block";
@@ -591,13 +613,17 @@
                 document.getElementById("curr-bet-quantity").innerHTML = "";
                 document.getElementById("curr-bet-value").innerHTML = "";
             }
+            if (admin = data["name"]) {
+                document.getElementById("dice-count-container").style.display = "none";
+            }
             if (data["name"] == name) {
                 popPlayers("startroll");
             }
         });
 
         function startRoll() {
-            socketio.emit("start_roll_to_server", {name:name});
+            let diceCount = parseInt(document.getElementById("place-dice-count").innerHTML);
+            socketio.emit("start_roll_to_server", {name:name, diceCount:diceCount});
         }
 
         socketio.on("place_bet_to_client", function(data) {
@@ -616,8 +642,8 @@
                     document.getElementById("fluff-submit").style.display = "block";
                 }
                 else {
-                    for (p in data["users"]) {
-                        if (p.name == name) {
+                    for (let p=0; p < data["users"].length; ++p) {
+                        if (data["users"][p].name == name) {
                             document.getElementById("fluff-submit").style.display = "block";
                         }
                     }

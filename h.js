@@ -96,14 +96,23 @@ io.sockets.on("connection", function(socket){
 	socket.on('start_roll_to_server', function(data){
 		if (data["name"] == admin && rollReady) {
 			if (gameOn == false) {
+				console.log("hererrererer");
 				gameOn = true;
+				for (let i = 0; i < users.length; ++i) {
+					users[i].numDice = data["diceCount"];
+					for (let j = 0; j < data["diceCount"]; ++j) {
+						users[i].dice[j] = 'X';
+					}
+				}
 			}
 			let numWildArray = [];
 			let totalWild = 0;
 			let firstTurnIndex = [0];
 			for (let i=0; i<users.length; ++i) {
 				let numWild = 0;
-				for (let j=0; j<5; ++j) {
+				console.log("numDice:")
+				console.log(users[i].numDice)
+				for (let j=5-users[i].numDice; j<5; ++j) {
 					if (j >= 5-users[i].numDice){
 						let diceRoll = Math.floor(Math.random()*6) + 1;
 						if (diceRoll == 1) {
@@ -162,7 +171,7 @@ io.sockets.on("connection", function(socket){
 				// 	turn = 0;
 				// }
 				turn = (turn+1)%(users.length);
-				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
+				io.sockets.emit('place_bet_to_client', {users:users, name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
 			}
 			else if (parseInt(data["quantity"]) == curBet.quantity && parseInt(data["value"]) > curBet.value) {
 				curBet = {name:data["name"], index:turn, quantity:data["quantity"], value:data["value"]};
@@ -173,7 +182,7 @@ io.sockets.on("connection", function(socket){
 				// 	turn = 0;
 				// }
 				turn = (turn+1)%(users.length);
-				io.sockets.emit('place_bet_to_client', {name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
+				io.sockets.emit('place_bet_to_client', {users:users, name:data["name"], quantity:data["quantity"], value:data["value"], valid:true, newTurn:users[turn].name});
 
 			}
 			else {
