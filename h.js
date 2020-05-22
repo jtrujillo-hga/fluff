@@ -99,9 +99,10 @@ io.sockets.on("connection", function(socket){
 				console.log("hererrererer");
 				gameOn = true;
 				for (let i = 0; i < users.length; ++i) {
-					users[i].numDice = data["diceCount"];
-					for (let j = 0; j < data["diceCount"]; ++j) {
+					users[i].numDice = data["diceCount"];					
+					for (let j = 0; j < data["diceCount"]; ++j) {					
 						users[i].dice[j] = 'X';
+						console.log("("+i+","+j+")"+"was set to x");//Æ
 					}
 				}
 			}
@@ -112,7 +113,8 @@ io.sockets.on("connection", function(socket){
 				let numWild = 0;
 				console.log("numDice:")
 				console.log(users[i].numDice)
-				for (let j=5-users[i].numDice; j<5; ++j) {
+				//for (let j=5-users[i].numDice; j<5; ++j) {
+				for (let j=0; j<5; ++j) { //Æ
 					if (j >= 5-users[i].numDice){
 						let diceRoll = Math.floor(Math.random()*6) + 1;
 						if (diceRoll == 1) {
@@ -126,6 +128,7 @@ io.sockets.on("connection", function(socket){
 					}
 					else {
 						users[i].dice[j] = "X";
+						console.log("("+i+","+j+")"+"was set to x");//Æ
 					}
 				}
 				numWildArray.push({name:users[i].name, numWild:numWild});
